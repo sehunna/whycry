@@ -1,0 +1,22 @@
+# .env local configuration file
+.env
+
+# Python byte code and caches
+__pycache__/
+*.pyc
+.streamlit/
+
+# Temporary media files (Avoid committing massive media files)
+*.mp4
+*.mov
+*.wav
+
+# User-specific baby profile, feedback, and logs
+feedbacks.json
+baby_status.json
+last_baby.txt
+*.log
+
+# Editor settings
+.idea/
+.vscode/

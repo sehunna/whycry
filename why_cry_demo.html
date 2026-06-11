@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhyCry - 아기 울음 분석 인공지능 데모</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Outfit:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FFA3A3;
+            --primary-hover: #FF8F8F;
+            --bg-gradient: linear-gradient(135deg, #FFF1F1 0%, #F1F5FF 100%);
+            --card-bg: rgba(255, 255, 255, 0.75);
+            --text-main: #4A4A4A;
+            --text-muted: #8E8E8E;
+            --success: #88B04B;
+            --warning: #F5C26B;
+            --error: #FF6B6B;
+        }
+
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            max-width: 650px;
+            width: 100%;
+            padding-bottom: 50px;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+            margin: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 10px 30px rgba(224, 122, 95, 0.06);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #6A6A6A;
+            margin-bottom: 6px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            outline: none;
+            color: var(--text-main);
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 163, 163, 0.25);
+        }
+
+        /* File Upload Zone */
+        .file-upload-zone {
+            border: 2px dashed rgba(255, 163, 163, 0.4);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .file-upload-zone:hover {
+            background: rgba(255, 163, 163, 0.05);
+            border-color: var(--primary-hover);
+        }
+
+        .file-upload-zone input[type="file"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        .file-upload-zone * {
+            pointer-events: none;
+        }
+
+        .upload-icon {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+
+        .file-info {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Action Buttons */
+        .btn {
+            background: linear-gradient(135deg, #FFA3A3 0%, #FFB6B6 100%);
+            border: none;
+            padding: 14px 24px;
+            border-radius: 14px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(255, 163, 163, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255, 163, 163, 0.35);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            background: #D5D5D5;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Status Box */
+        .status-box {
+            background: rgba(245, 194, 107, 0.15);
+            border: 1px solid rgba(245, 194, 107, 0.3);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.08);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border-left-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        /* Diagnostic Results Section */
+        .results-section {
+            display: none;
+        }
+
+        .primary-cause-card {
+            background: linear-gradient(135deg, #FFF5F5 0%, #FFF0EA 100%);
+            border: 1px solid rgba(255, 163, 163, 0.3);
+            padding: 20px;
+            border-radius: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .primary-cause-card h3 {
+            color: #E07A5F;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        /* Custom Horizontal Chart */
+        .chart-container {
+            margin-top: 15px;
+        }
+
+        .chart-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .chart-label {
+            width: 90px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .chart-bar-container {
+            flex-grow: 1;
+            background: rgba(0, 0, 0, 0.05);
+            height: 14px;
+            border-radius: 7px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chart-bar {
+            height: 100%;
+            border-radius: 7px;
+            width: 0;
+            background: linear-gradient(90deg, #FFA3A3 0%, #FFC9C9 100%);
+            transition: width 1s cubic-bezier(0.1, 0.8, 0.2, 1);
+        }
+
+        .chart-value {
+            width: 50px;
+            text-align: right;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Action items list */
+        .action-list {
+            margin-top: 15px;
+        }
+
+        .action-item {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-badge {
+            background: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(255, 163, 163, 0.3);
+        }
+
+        .action-content h4 {
+            margin: 0 0 4px 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .action-content p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #6A6A6A;
+            line-height: 1.4;
+        }
+
+        .alert-card {
+            background: rgba(255, 107, 107, 0.08);
+            border: 1px dashed rgba(255, 107, 107, 0.3);
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #C0392B;
+        }
+
+        .info-msg {
+            background: rgba(136, 176, 75, 0.08);
+            border: 1px solid rgba(136, 176, 75, 0.2);
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 0.88rem;
+            line-height: 1.55;
+            color: #4B6B1D;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Helper config styling */
+        .api-config-section {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .api-config-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>WhyCry</h1>
+            <p>인공지능 기반 아기 울음 진단 및 케어 솔루션 (정적 데모 제출용)</p>
+        </div>
+
+        <!-- 0. API Config -->
+        <div class="api-config-section">
+            <div class="api-config-title">🔑 Gemini API 설정</div>
+            <div class="form-group">
+                <input type="text" id="apiKey" placeholder="Gemini API Key를 입력하세요" value="여기에 API 키를 입력하세요">
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 5px 0 0 0;">* 프로젝트 제출물 평가 시 사용 가능한
+                    Gemini API 키가 기본 설정되어 있습니다.</p>
+            </div>
+        </div>
+
+        <!-- 1. Baby Info Form -->
+        <div class="card">
+            <div class="card-title">👶 아기 프로필 및 육아 기록</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="babyName">아기 이름</label>
+                    <input type="text" id="babyName" value="서준">
+                </div>
+                <div class="form-group">
+                    <label for="ageDays">생후 일수 (일)</label>
+                    <input type="number" id="ageDays" value="38">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="feedingType">수유 형태</label>
+                <select id="feedingType">
+                    <option value="breast">모유 수유 (Breast)</option>
+                    <option value="formula" selected>분유 수유 (Formula)</option>
+                    <option value="mixed">혼합 수유 (Mixed)</option>
+                </select>
+            </div>
+
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label for="lastFeeding">마지막 수유</label>
+                    <select id="lastFeeding">
+                        <option value="30">1시간 이내</option>
+                        <option value="120" selected>대략 2시간 전</option>
+                        <option value="180">대략 3시간 전</option>
+                        <option value="240">4시간 이상</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="lastDiaper">최근 기저귀</label>
+                    <select id="lastDiaper">
+                        <option value="30">방금 교체</option>
+                        <option value="120" selected>2시간 전</option>
+                        <option value="180">3시간 전</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="burpState">수유 후 트림</label>
+                    <select id="burpState">
+                        <option value="트림함" selected>트림함</option>
+                        <option value="트림 안 함">트림 안 함</option>
+                        <option value="잘 모름">잘 모름</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Video File Input -->
+        <div class="card">
+            <div class="card-title">📹 울음 분석용 동영상 업로드</div>
+            <div class="form-group">
+                <div class="file-upload-zone" id="dropZone">
+                    <div class="upload-icon">📁</div>
+                    <div style="font-weight: 500;">여기에 마우스로 비디오 파일을 떨어뜨리거나 탭하여 선택하세요.</div>
+                    <div class="file-info" id="fileInfo">MP4, MOV 파일 가능 (10~15초 분량 권장)</div>
+                    <input type="file" id="videoFile" accept="video/mp4, video/quicktime, .mp4, .mov">
+                </div>
+            </div>
+
+            <button class="btn" id="analyzeBtn" disabled>
+                <span>🔍 아기 울음 종합 분석 시작</span>
+            </button>
+
+            <div class="status-box" id="statusBox">
+                <div class="spinner"></div>
+                <span id="statusMessage">파일 읽는 중...</span>
+            </div>
+        </div>
+
+        <!-- 3. Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div class="card">
+                <div class="card-title">📊 종합 진단 리포트</div>
+
+                <div class="primary-cause-card">
+                    <p style="margin: 0 0 4px 0; font-size: 0.82rem; color: var(--text-muted); font-weight: 700;">🎯 가장
+                        유력한 원인</p>
+                    <h3 id="primaryReason">로딩 중...</h3>
+                </div>
+
+                <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; margin-top: 15px;">[원인별 예측 확률 분포]
+                </h4>
+                <div class="chart-container" id="chartContainer">
+                    <!-- Bar rows inserted dynamically -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📝 상세 진단 근거</div>
+                <div class="info-msg" id="reasoningDetails">
+                    로딩 중...
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🍼 초보 아빠/엄마를 위한 권장 행동 요령</div>
+                <div class="action-list" id="actionList">
+                    <!-- Action cards inserted dynamically -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🚨 의학적 안전 안내</div>
+                <div class="alert-card" id="alertCard">
+                    로딩 중...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKeyInput = document.getElementById('apiKey');
+        const videoFileInput = document.getElementById('videoFile');
+        const dropZone = document.getElementById('dropZone');
+        const fileInfo = document.getElementById('fileInfo');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const statusBox = document.getElementById('statusBox');
+        const statusMessage = document.getElementById('statusMessage');
+        const resultsSection = document.getElementById('resultsSection');
+
+        let selectedFile = null;
+
+        // Drop Zone Click Handler -> Trigger hidden file input
+        dropZone.addEventListener('click', () => {
+            videoFileInput.click();
+        });
+
+        // File Input Handlers
+        videoFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.background = "rgba(255, 163, 163, 0.08)";
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.style.background = "rgba(255, 255, 255, 0.4)";
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.background = "rgba(255, 255, 255, 0.4)";
+            if (e.dataTransfer.files.length > 0) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            selectedFile = file;
+            fileInfo.innerHTML = `선택된 파일: <strong>${file.name}</strong> (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+            analyzeBtn.disabled = false;
+            resultsSection.style.display = "none";
+        }
+
+        // Status display helper
+        function updateStatus(message, showSpinner = true) {
+            statusBox.style.display = "flex";
+            statusMessage.innerText = message;
+            const spinner = statusBox.querySelector('.spinner');
+            spinner.style.display = showSpinner ? "block" : "none";
+        }
+
+        // Helper fetch function with backoff retry
+        async function fetchWithRetry(url, options, maxRetries = 5, initialDelay = 3000) {
+            let delay = initialDelay;
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        const errMessage = errData.error?.message || (Object.keys(errData).length ? JSON.stringify(errData) : "") || response.statusText;
+
+                        if ((response.status === 503 || response.status === 429) && attempt < maxRetries - 1) {
+                            console.warn(`[API] 503/429 발생, ${delay}ms 후 재시도... (시도 ${attempt + 1}/${maxRetries})`);
+                            updateStatus(`구글 서버 일시적 혼잡으로 재시도 중... (시도 ${attempt + 1}/${maxRetries})`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2;
+                            continue;
+                        }
+                        throw new Error(`HTTP ${response.status}: ${errMessage}`);
+                    }
+                    return response;
+                } catch (error) {
+                    if (attempt === maxRetries - 1) throw error;
+                    console.warn(`[API] 오류 발생: ${error.message}, ${delay}ms 후 재시도...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // Main Analyze Button Trigger
+        analyzeBtn.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                alert('Gemini API Key를 입력해 주세요.');
+                return;
+            }
+
+            if (!selectedFile) {
+                alert('동영상 파일을 업로드해 주세요.');
+                return;
+            }
+
+            analyzeBtn.disabled = true;
+            resultsSection.style.display = "none";
+
+            try {
+                // 1단계: Gemini File API에 동영상 파일 업로드
+                updateStatus("1단계: 동영상 파일을 Gemini File API로 업로드 중... (서버 점검/네트워크에 따라 수 초 소요)");
+
+                const boundary = "boundary_string_why_cry_demo";
+                const metadata = {
+                    file: {
+                        displayName: selectedFile.name,
+                    }
+                };
+
+                // 브라우저가 MIME 타입을 감지하지 못하거나 옥텟 스트림으로 인식할 때를 위한 확장자 기반 보강
+                let fileMimeType = selectedFile.type;
+                if (!fileMimeType || fileMimeType === "application/octet-stream") {
+                    const ext = selectedFile.name.split('.').pop().toLowerCase();
+                    if (ext === 'mov' || ext === 'qt') {
+                        fileMimeType = 'video/quicktime';
+                    } else {
+                        fileMimeType = 'video/mp4';
+                    }
+                }
+
+                const helperBlob = new Blob([
+                    `--${boundary}\r\n`,
+                    `Content-Type: application/json; charset=UTF-8\r\n\r\n`,
+                    JSON.stringify(metadata),
+                    `\r\n--${boundary}\r\n`,
+                    `Content-Type: ${fileMimeType}\r\n\r\n`
+                ]);
+
+                const footerBlob = new Blob([
+                    `\r\n--${boundary}--\r\n`
+                ]);
+
+                const uploadBody = new Blob([helperBlob, selectedFile, footerBlob]);
+
+                const uploadResponse = await fetchWithRetry(`https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Goog-Upload-Protocol': 'multipart',
+                        'Content-Type': `multipart/related; boundary=${boundary}`
+                    },
+                    body: uploadBody
+                });
+
+                const uploadResult = await uploadResponse.json();
+                const fileUri = uploadResult.file.uri;
+                const fileName = uploadResult.file.name;
+                console.log("Upload Success. File URI:", fileUri, "File Name:", fileName);
+
+                // 2단계: 파일 처리 ACTIVE 상태 대기 (폴링)
+                updateStatus("2단계: Gemini AI 서버의 파일 렌더링 대기 중 (ACTIVE 상태 대기)...");
+
+                let isActive = false;
+                while (!isActive) {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+
+                    const checkResponse = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`, {
+                        method: 'GET'
+                    });
+                    const checkResult = await checkResponse.json();
+                    console.log("File status check:", checkResult.state);
+
+                    if (checkResult.state === "ACTIVE") {
+                        isActive = true;
+                    } else if (checkResult.state === "FAILED") {
+                        throw new Error("Gemini AI 서버에서 비디오 파일 트랜스코딩에 실패했습니다.");
+                    }
+                }
+
+                // 3단계: 구조화된 다중 모달 추론 API 호출
+                updateStatus("3단계: Gemini 2.5 Flash를 이용한 시각 및 울음소리 정밀 분석 중...");
+
+                // 입력 정보 획득
+                const babyName = document.getElementById('babyName').value.trim();
+                const ageDays = parseInt(document.getElementById('ageDays').value);
+                const feedingType = document.getElementById('feedingType').value;
+                const lastFeedingMins = parseInt(document.getElementById('lastFeeding').value);
+                const lastDiaperMins = parseInt(document.getElementById('lastDiaper').value);
+                const burpState = document.getElementById('burpState').value;
+
+                const prompt = `
+당신은 소아과 의사이자 유아 행동 분석 전문가, 베테랑 육아 상담사입니다.
+제시된 현재 상황 정보와 아기 우는 동영상 속 아기의 미세한 행동(시각) 및 울음소리(음향)를 복합적으로 관찰하여 울음의 주된 원인을 진단해 주세요.
+
+[현재 분석 중인 상황 정보]
+- 아기 이름: ${babyName}
+- 생후 일수: ${ageDays}일
+- 수유 형태: ${feedingType === 'breast' ? '모유 수유' : feedingType === 'formula' ? '분유 수유' : '혼합 수유'}
+- 마지막 수유 후 경과 시간: ${lastFeedingMins}분
+- 마지막 기저귀 변경 후 경과 시간: ${lastDiaperMins}분
+- 최근 수유 후 트림 여부: ${burpState}
+- 아기 체온: 36.8°C
+
+[분석 및 추론 규칙]
+영상과 소리 데이터에서 아래 징후들을 분석하여 원인 확률을 배분해 주세요:
+1. 배고픔(hunger): 입을 빠는 움직임, 손가락을 얼굴 주위로 가져감. 수유 시간이 2시간 이상 흘렀을 경우 가중.
+2. 배앓이/트림 필요(gas_or_burp): 다리를 배 쪽으로 오므림, 등을 비틂, 얼굴을 찡그림, 최근 수유 후 트림을 안 했거나 분유 수유 직후일 경우 가중.
+3. 졸림(sleepy): 눈을 비비거나 감고 있음, 움직임 수준이 낮음, 최근 수면 이후 시간이 흐름.
+4. 기저귀(diaper): 버둥거림, 최근 기저귀를 간 지 오래됨.
+5. 안아주기(comfort_and_attachment): 칭얼거리는 리듬, 신체적인 불만족 요인(수유, 수면, 기저귀)이 이미 양호하게 충족된 상태.
+6. 아픔(pain_or_discomfort): 척추를 활처럼 완전히 젖힘, 비명에 가까운 날카롭고 갑작스러운 연속적 울음소리.
+
+출력 필드의 설명 조건에 제시된 글자 수/문장 수 제한을 엄격하게 준수하여 군더더기 없이 간결하게 대답해 주세요.
+`;
+
+                const requestBody = {
+                    contents: [
+                        {
+                            parts: [
+                                {
+                                    fileData: {
+                                        fileUri: fileUri,
+                                        mimeType: selectedFile.type || "video/mp4"
+                                    }
+                                },
+                                {
+                                    text: prompt
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                probabilities: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        hunger: { type: "NUMBER", description: "배고픔 예측 확률 (0.0 ~ 1.0)" },
+                                        gas_or_burp: { type: "NUMBER", description: "배앓이 및 트림 필요 예측 확률 (0.0 ~ 1.0)" },
+                                        sleepy: { type: "NUMBER", description: "졸림 예측 확률 (0.0 ~ 1.0)" },
+                                        diaper: { type: "NUMBER", description: "기저귀 예측 확률 (0.0 ~ 1.0)" },
+                                        comfort_and_attachment: { type: "NUMBER", description: "안아주기 및 애착 요구 예측 확률 (0.0 ~ 1.0)" },
+                                        pain_or_discomfort: { type: "NUMBER", description: "아픔 및 신체불편 예측 확률 (0.0 ~ 1.0)" }
+                                    },
+                                    required: ["hunger", "gas_or_burp", "sleepy", "diaper", "comfort_and_attachment", "pain_or_discomfort"]
+                                },
+                                primary_reason: { type: "STRING", description: "가장 유력한 원인에 대한 짤막한 핵심 한 줄 요약" },
+                                reasoning_details: { type: "STRING", description: "입력 데이터와 비디오 분석에 근거한 추론 과정 요약 설명 (핵심 오사 및 원인 분석 위주로 3~4문장 이내로 매우 명확하고 짧게 작성)" },
+                                care_actions: {
+                                    type: "ARRAY",
+                                    items: {
+                                        type: "OBJECT",
+                                        properties: {
+                                            priority: { type: "INTEGER", description: "조치 우선순위 (1이 가장 높음)" },
+                                            title: { type: "STRING", description: "행동 지침 제목" },
+                                            description: { type: "STRING", description: "행동 요령 설명 (최대 2문장 이내로 간결하게 핵심만 작성)" }
+                                        },
+                                        required: ["priority", "title", "description"]
+                                    },
+                                    description: "부모가 당장 순서대로 취해야 할 가이드 행동 지침 목록 (최대 4개 이내)"
+                                },
+                                warning_or_red_flags: { type: "STRING", description: "의학적 경고 징후나 긴급 상황 안내 (1~2문장 이내로 매우 짧고 간결하게 작성)" }
+                            },
+                            required: ["probabilities", "primary_reason", "reasoning_details", "care_actions", "warning_or_red_flags"]
+                        },
+                        temperature: 0.2
+                    }
+                };
+
+                const inferenceResponse = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const inferenceResult = await inferenceResponse.json();
+                const analysisText = inferenceResult.candidates[0].content.parts[0].text;
+                const analysis = JSON.parse(analysisText);
+                console.log("Analysis Result JSON:", analysis);
+
+                // 임시 업로드 파일 삭제 (Gemini 클라우드 저장소 공간 정리)
+                try {
+                    await fetch(`https://generativelanguage.googleapis.com/v1beta/${fileName}?key=${apiKey}`, {
+                        method: 'DELETE'
+                    });
+                    console.log("Deleted temporary video file from Gemini Cloud.");
+                } catch (delErr) {
+                    console.warn("Failed to delete temp file:", delErr);
+                }
+
+                // 4단계: 결과 렌더링
+                renderResults(analysis);
+                updateStatus("분석이 성공적으로 완료되었습니다!", false);
+                setTimeout(() => { statusBox.style.display = "none"; }, 2000);
+
+            } catch (err) {
+                console.error("E2E Process Error:", err);
+                updateStatus(`분석 과정 중 에러가 발생했습니다:\n${err.message}`, false);
+                alert(`에러 발생: ${err.message}`);
+            } finally {
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        // Render Function
+        function renderResults(analysis) {
+            // 유력 원인 바인딩
+            document.getElementById('primaryReason').innerText = analysis.primary_reason;
+
+            // 가로 바 차트 렌더링
+            const chartContainer = document.getElementById('chartContainer');
+            chartContainer.innerHTML = '';
+
+            const labelsMap = {
+                hunger: { label: "🍼 배고픔", val: analysis.probabilities.hunger },
+                gas_or_burp: { label: "💨 배앓이", val: analysis.probabilities.gas_or_burp },
+                sleepy: { label: "💤 졸림", val: analysis.probabilities.sleepy },
+                diaper: { label: "🧷 기저귀", val: analysis.probabilities.diaper },
+                comfort_and_attachment: { label: "🧸 안아주기", val: analysis.probabilities.comfort_and_attachment },
+                pain_or_discomfort: { label: "🌡️ 아픔", val: analysis.probabilities.pain_or_discomfort }
+            };
+
+            // 데이터 정렬 없이 순서대로 렌더링
+            for (const [key, item] of Object.entries(labelsMap)) {
+                const percentage = Math.round(item.val * 100);
+
+                const chartRow = document.createElement('div');
+                chartRow.className = 'chart-row';
+
+                chartRow.innerHTML = `
+                <span class="chart-label">${item.label}</span>
+                <div class="chart-bar-container">
+                    <div class="chart-bar" style="width: ${percentage}%"></div>
+                </div>
+                <span class="chart-value">${percentage}%</span>
+            `;
+                chartContainer.appendChild(chartRow);
+            }
+
+            // 상세 근거 바인딩
+            document.getElementById('reasoningDetails').innerText = analysis.reasoning_details;
+
+            // 권장 행동 요령 카드 바인딩
+            const actionList = document.getElementById('actionList');
+            actionList.innerHTML = '';
+
+            // 조치 사항 우선순위 오름차순 정렬
+            const sortedActions = [...analysis.care_actions].sort((a, b) => a.priority - b.priority);
+
+            sortedActions.forEach(action => {
+                const actionCard = document.createElement('div');
+                actionCard.className = 'action-item';
+
+                actionCard.innerHTML = `
+                <div class="action-badge">${action.priority}</div>
+                <div class="action-content">
+                    <h4>${action.title}</h4>
+                    <p>${action.description}</p>
+                </div>
+            `;
+                actionList.appendChild(actionCard);
+            });
+
+            // 의학적 경고 바인딩
+            document.getElementById('alertCard').innerHTML = `<strong>의학적 수칙 및 안전 주의:</strong> ${analysis.warning_or_red_flags}`;
+
+            // 결과 영역 노출
+            resultsSection.style.display = "block";
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+
+</html>

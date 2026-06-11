@@ -1,0 +1,9 @@
+{
+  "age_days": 17,
+  "feeding_type": "formula",
+  "last_feeding_minutes_ago": 65,
+  "last_diaper_change_minutes_ago": 60,
+  "last_sleep_ended_minutes_ago": 25,
+  "burped_after_last_feeding": true,
+  "temperature_celsius": 36.8
+}
