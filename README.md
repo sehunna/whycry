@@ -4,6 +4,11 @@ WhyCry는 아기의 미세한 행동(시각적 관찰)과 울음소리(음향적
 
 특히, 아기의 울음이 단 하나의 독립된 원인이 아니라 **"배앓이와 안아주기 요구가 겹친 복합적인 상황"**임을 감안하여, **"다중 행동 피드백 및 소프트 업데이트(Soft Update) 학습 규칙"**을 적용합니다.
 
+<img width="276" height="269" alt="1" src="https://github.com/user-attachments/assets/47f6a671-fc46-4ff4-9a9b-61bfcb490d78" />
+<img width="276" height="269" alt="2" src="https://github.com/user-attachments/assets/569df4d5-5215-4b0d-a8b0-7f7138c24fb6" />
+<img width="276" height="269" alt="3" src="https://github.com/user-attachments/assets/ae37e875-67c1-4449-8752-80cb468d0303" />
+
+
 ---
 
 ## 📺 서비스 시연 영상
